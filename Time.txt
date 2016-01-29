@@ -1,0 +1,25 @@
+Unreal VS Unity		20m
+Planning		1h
+Learning Unreal		4h45m
+			[3h]
+	Movement
+	Prev/Next
+	Auto-Play
+			1h25m		[+5h17m]
+	Rotation	
+	Kinematic Point
+		ROTATION IGEN
+		adjust velocity
+			2h
+	Velocity adjustment
+			10h
+		DynamicMotion
+		DifferentialDrive
+
+
+
+
+
+Teleport CODE
+Look at rotation
+Velocity goes past waypoint
