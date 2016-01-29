@@ -102,7 +102,7 @@ TArray<TArray<int>> AAStar::readData(FString fileName)
 {
 	TArray<FString> strArray;
 	FString projectDir = FPaths::GameDir();
-	projectDir += "Data/" + fileName;
+	projectDir += "Input Data/" + fileName;
 	FFileHelper::LoadANSITextFileToStrings(*projectDir, NULL, strArray);
 
 	TArray<TArray<int32>> data;
