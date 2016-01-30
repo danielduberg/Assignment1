@@ -10,6 +10,8 @@
 #include <stdexcept>
 #include "CoreMisc.h"
 #include <limits>
+#include <stdlib.h>
+#include <time.h>
 
 static FString fileMap = "discObst.txt";
 static FString filePositions = "positions.txt";
@@ -17,13 +19,22 @@ static FString fileOutName = "discData.txt";
 
 TArray<FVector> ARRT::generate_path(int32 n)
 {
+	srand(time(NULL));
+
 	TArray<TArray<int32>> map = readData(fileMap);
 	TArray<TArray<int32>> positions = readData(filePositions);
 
 	FVector2D start = FVector2D(positions[0][0] - 1, positions[0][1] - 1);
+
 	FVector2D goal = FVector2D(positions[1][0] - 1, positions[1][1] - 1);
 
-	TArray<FVector> path;
+	TArray<FVector2D> freeSpace = getFreeSpace(map);
+
+	TArray<Node> pathNode = findPath(start, goal, freeSpace, map);
+
+	TArray<FVector> path = makePath(pathNode);
+
+	writePathToFile(path, "Test");
 
 	return path;
 	/*
@@ -52,11 +63,157 @@ TArray<FVector> ARRT::generate_path(int32 n)
 	*/
 }
 
+TArray<FVector> ARRT::makePath(TArray<Node> nodes)
+{
+	TArray<FVector> path;
+
+	for (int c = 0; c < nodes.Num(); c++) {
+		path.Add(FVector(nodes[c].pos, 0));
+	}
+
+	return path;
+}
+
+TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVector2D> freeSpace, TArray<TArray<int32>> map)
+{
+	TArray<Node> rrt;
+
+	Node current;
+	current.pos = start;
+
+	rrt.Add(current);
+
+	freeSpace.RemoveSingle(start);
+
+	FVector2D randomPoint;
+
+	Node closest;
+
+	while (current.pos != goal && freeSpace.Num() > 0) {
+		randomPoint = getRandomPoint(freeSpace);
+
+		closest = getClosest(rrt, randomPoint);
+
+		// TODO: get input?!
+
+		Node newCurrent;
+		if (goTowards(newCurrent, closest, randomPoint, freeSpace)) {
+			current = newCurrent;
+			freeSpace.RemoveSingle(current.pos);
+		}
+	}
+
+	TArray<Node> path;
+	path.Add(current);
+
+	while (current.cameFrom != nullptr) {
+		current = *current.cameFrom;
+		path.Insert(current, 0);
+	}
+	
+	return path;
+}
+
+bool ARRT::goTowards(Node & node, Node from, FVector2D to, TArray<FVector2D> freeSpace)
+{
+	FVector2D test = from.pos;
+
+	float distance = std::numeric_limits<float>::infinity();
+	FVector2D best;
+
+	bool success = false;
+
+	test = FVector2D(test[0] - 1, test[1]);
+	if (freeSpace.Contains(test)) {
+		if (getDistance(test, to) < distance) {
+			distance = getDistance(test, to);
+			best = test;
+			success = true;
+		}
+	}
+	test = FVector2D(test[0] + 1, test[1]);
+	if (freeSpace.Contains(test)) {
+		if (getDistance(test, to) < distance) {
+			distance = getDistance(test, to);
+			best = test;
+			success = true;
+		}
+	}
+	test = FVector2D(test[0], test[1] - 1);
+	if (freeSpace.Contains(test)) {
+		if (getDistance(test, to) < distance) {
+			distance = getDistance(test, to);
+			best = test;
+			success = true;
+		}
+	}
+	test = FVector2D(test[0], test[1] + 1);
+	if (freeSpace.Contains(test)) {
+		if (getDistance(test, to) < distance) {
+			distance = getDistance(test, to);
+			best = test;
+			success = true;
+		}
+	}
+
+	node.pos = best;
+	node.cameFrom = &from;
+
+	return success;
+}
+
+ARRT::Node ARRT::getClosest(TArray<Node> rrt, FVector2D point)
+{
+	Node closestNode;
+	float distance = std::numeric_limits<float>::infinity();
+	
+	float tempDistance;
+	for (int32 c = 0; c < rrt.Num(); c++) {
+		tempDistance = getDistance(rrt[c].pos, point);
+		if (tempDistance < distance) {
+			distance = tempDistance;
+			closestNode = rrt[c];
+		}
+	}
+
+
+	return closestNode;
+}
+
+float ARRT::getDistance(FVector2D start, FVector2D goal)
+{
+	float distance = (goal[0] - start[0]) * (goal[0] - start[0]) + (goal[1] - start[1]) * (goal[1] - start[1]);
+
+	return sqrt(distance);
+}
+
+FVector2D ARRT::getRandomPoint(TArray<FVector2D> points)
+{
+	int32 index = rand() % points.Num();
+	FVector2D point = points[index];
+	return point;
+}
+
+TArray<FVector2D> ARRT::getFreeSpace(TArray<TArray<int32>> map)
+{
+	TArray<FVector2D> freeSpace;
+
+	for (int c = 0; c < map.Num(); c++) {
+		for (int g = 0; g < map[c].Num(); g++) {
+			if (map[c][g] == 0) {
+				freeSpace.Add(FVector2D(c, g));
+			}
+		}
+	}
+
+	return freeSpace;
+}
+
 TArray<TArray<int>> ARRT::readData(FString fileName)
 {
 	TArray<FString> strArray;
 	FString projectDir = FPaths::GameDir();
-	projectDir += "Data/" + fileName;
+	projectDir += "Input Data/" + fileName;
 	FFileHelper::LoadANSITextFileToStrings(*projectDir, NULL, strArray);
 
 	TArray<TArray<int32>> data;
