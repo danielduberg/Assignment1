@@ -17,10 +17,16 @@ public:
 private:
 	struct Input {
 		// TODO
+		float velocity;
+		float acceleration;
+		float angle;
 	};
 
 	struct State {
 		// TODO
+		float velocity;
+		float direction;	// Orientation?
+		float acceleration;	// is it needed?
 	};
 
 	struct Node {
