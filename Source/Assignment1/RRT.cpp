@@ -34,33 +34,9 @@ TArray<FVector> ARRT::generate_path(int32 n)
 
 	TArray<FVector> path = makePath(pathNode);
 
-	writePathToFile(path, "Test");
+	writePathToFile(path, "Test.txt");
 
 	return path;
-	/*
-	Algorithm BuildRRT
-	  Input: Initial configuration qinit, number of vertices in RRT K, incremental distance q)
-	  Output: RRT graph G
-
-	  G.init(qinit)
-	  for k = 1 to K
-		qrand = RAND_CONF()
-		qnear = NEAREST_VERTEX(qrand, G)
-		qnew = NEW_CONF(qnear, qrand, q)
-		G.add_vertex(qnew)
-		G.add_edge(qnear, qnew)
-	  return G
-
-	  In the algorithm above, "RAND_CONF" grabs a random configuration qrand in C. 
-	  This may be replaced with a function "RAND_FREE_CONF" that uses samples in Cfree, 
-	  while rejecting those in Cobs using some collision detection algorithm.
-
-	  "NEAREST_VERTEX" is a straightforward function that runs through all vertexes v in graph G, 
-	  calculates the distance between qrand and v using some measurement function thereby returning the nearest vertex.
-
-	  "NEW_CONF" selects a new configuration qnew by moving an incremental distance q from qnear in the direction of qrand. 
-	  (According to [4] in holonomic problems, this should be omitted and qrand used instead of qnew.)
-	*/
 }
 
 TArray<FVector> ARRT::makePath(TArray<Node> nodes)
@@ -76,10 +52,11 @@ TArray<FVector> ARRT::makePath(TArray<Node> nodes)
 
 TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVector2D> freeSpace, TArray<TArray<int32>> map)
 {
-	TArray<Node> rrt;
+	TArray<Node *> rrt;
 
-	Node current;
-	current.pos = start;
+	Node * current = new Node;
+	current->pos = start;
+	current->cameFrom = nullptr;
 
 	rrt.Add(current);
 
@@ -87,104 +64,105 @@ TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVecto
 
 	FVector2D randomPoint;
 
-	Node closest;
-
-	while (current.pos != goal && freeSpace.Num() > 0) {
+	while (!current->pos.Equals(goal, 0.1) && freeSpace.Num() > 0) {
 		randomPoint = getRandomPoint(freeSpace);
 
-		closest = getClosest(rrt, randomPoint);
+		Node * closest = getClosest(rrt, randomPoint);
+
+		UE_LOG(LogTemp, Warning, TEXT("Free space: %d, current: %f %f, random: %f %f, closest: %f %f"), freeSpace.Num(), current->pos[0], current->pos[1], randomPoint[0], randomPoint[1], closest->pos[0], closest->pos[1]);
 
 		// TODO: get input?!
 
-		Node newCurrent;
-		if (goTowards(newCurrent, closest, randomPoint, freeSpace)) {
+		Node * newCurrent = new Node;
+		UE_LOG(LogTemp, Warning, TEXT("Test"));
+		if (goTowards(newCurrent, closest->pos, randomPoint, freeSpace)) {
+			UE_LOG(LogTemp, Warning, TEXT("Hej"));
 			current = newCurrent;
-			freeSpace.RemoveSingle(current.pos);
+			current->cameFrom = closest;
+			freeSpace.RemoveSingle(current->pos);
+			rrt.Add(current);
+		} else {
+			delete newCurrent;
 		}
+		UE_LOG(LogTemp, Warning, TEXT("!Hej då"));
 	}
 
-	TArray<Node> path;
-	path.Add(current);
+	UE_LOG(LogTemp, Warning, TEXT("DONE! Current: %f %f"), current->pos[0], current->pos[1]);
 
-	while (current.cameFrom != nullptr) {
-		current = *current.cameFrom;
-		path.Insert(current, 0);
+	TArray<Node> path;
+	path.Add(*current);
+
+	while (current->cameFrom != nullptr) {
+		UE_LOG(LogTemp, Warning, TEXT("DONE! Current: %f %f"), current->pos[0], current->pos[1]);
+		current = current->cameFrom;
+		path.Insert(*current, 0);
 	}
 	
 	return path;
 }
 
-bool ARRT::goTowards(Node & node, Node from, FVector2D to, TArray<FVector2D> freeSpace)
+bool ARRT::goTowards(Node * node, FVector2D from, FVector2D to, TArray<FVector2D> freeSpace)
 {
-	FVector2D test = from.pos;
 
 	float distance = std::numeric_limits<float>::infinity();
 	FVector2D best;
 
 	bool success = false;
 
-	test = FVector2D(test[0] - 1, test[1]);
+	FVector2D test = FVector2D(from[0] - 1, from[1]);
 	if (freeSpace.Contains(test)) {
-		if (getDistance(test, to) < distance) {
-			distance = getDistance(test, to);
+		if (FVector2D::Distance(test, to) < distance) {
+			distance = FVector2D::Distance(test, to);
 			best = test;
 			success = true;
 		}
 	}
-	test = FVector2D(test[0] + 1, test[1]);
+	test = FVector2D(from[0] + 1, from[1]);
 	if (freeSpace.Contains(test)) {
-		if (getDistance(test, to) < distance) {
-			distance = getDistance(test, to);
+		if (FVector2D::Distance(test, to) < distance) {
+			distance = FVector2D::Distance(test, to);
 			best = test;
 			success = true;
 		}
 	}
-	test = FVector2D(test[0], test[1] - 1);
+	test = FVector2D(from[0], from[1] - 1);
 	if (freeSpace.Contains(test)) {
-		if (getDistance(test, to) < distance) {
-			distance = getDistance(test, to);
+		if (FVector2D::Distance(test, to) < distance) {
+			distance = FVector2D::Distance(test, to);
 			best = test;
 			success = true;
 		}
 	}
-	test = FVector2D(test[0], test[1] + 1);
+	test = FVector2D(from[0], from[1] + 1);
 	if (freeSpace.Contains(test)) {
-		if (getDistance(test, to) < distance) {
-			distance = getDistance(test, to);
+		if (FVector2D::Distance(test, to) < distance) {
+			distance = FVector2D::Distance(test, to);
 			best = test;
 			success = true;
 		}
 	}
 
-	node.pos = best;
-	node.cameFrom = &from;
+	node->pos = best;
 
 	return success;
 }
 
-ARRT::Node ARRT::getClosest(TArray<Node> rrt, FVector2D point)
+ARRT::Node * ARRT::getClosest(TArray<Node *> rrt, FVector2D point)
 {
-	Node closestNode;
+	int32 bestIndex;
 	float distance = std::numeric_limits<float>::infinity();
 	
 	float tempDistance;
 	for (int32 c = 0; c < rrt.Num(); c++) {
-		tempDistance = getDistance(rrt[c].pos, point);
+		tempDistance = FVector2D::Distance(rrt[c]->pos, point);
 		if (tempDistance < distance) {
 			distance = tempDistance;
-			closestNode = rrt[c];
+			bestIndex = c;
 		}
 	}
 
 
-	return closestNode;
-}
-
-float ARRT::getDistance(FVector2D start, FVector2D goal)
-{
-	float distance = (goal[0] - start[0]) * (goal[0] - start[0]) + (goal[1] - start[1]) * (goal[1] - start[1]);
-
-	return sqrt(distance);
+	return rrt[bestIndex];
 }
 
 FVector2D ARRT::getRandomPoint(TArray<FVector2D> points)
@@ -201,7 +179,7 @@ TArray<FVector2D> ARRT::getFreeSpace(TArray<TArray<int32>> map)
 	for (int c = 0; c < map.Num(); c++) {
 		for (int g = 0; g < map[c].Num(); g++) {
 			if (map[c][g] == 0) {
-				freeSpace.Add(FVector2D(c, g));
+				freeSpace.Add(FVector2D(g, c));
 			}
 		}
 	}
@@ -240,7 +218,7 @@ void ARRT::writePathToFile(TArray<FVector> path, FString fileName)
 {
 	FString str;
 
-	for (int32 c = path.Num() - 1; c >= 0; c--) {
+	for (int32 c = 0; c < path.Num(); c++) {
 		str += FString::SanitizeFloat(path[c][0] + 1) + "\t" + FString::SanitizeFloat(path[c][1] + 1) + "\n";
 	}
 
@@ -249,132 +227,4 @@ void ARRT::writePathToFile(TArray<FVector> path, FString fileName)
 	FFileHelper::
 		FFileHelper::SaveStringToFile(str, *projectDir);
 
-}
-
-TArray<TArray<float>> ARRT::infMap(int32 rows, int32 columns)
-{
-	TArray<TArray<float>> infMap;
-	for (int32 c = 0; c < rows; c++) {
-		TArray<float> row;
-		for (int32 g = 0; g < columns; g++) {
-			row.Add(std::numeric_limits<float>::infinity());
-		}
-		infMap.Add(row);
-	}
-
-	return infMap;
-}
-
-float ARRT::dist_between(FVector2D start, FVector2D goal)
-{
-	float x = (goal[0] - start[0]) * (goal[0] - start[0]) + (goal[1] - start[1]) * (goal[1] - start[1]);
-
-	return sqrtf(x);
-}
-
-float ARRT::heuristic_cost_estimate(FVector2D start, FVector2D goal)
-{
-	return dist_between(start, goal);
-}
-
-TArray<FVector> ARRT::reconstruct_path(TMap<FVector2D, FVector2D> cameFrom, FVector2D current)
-{
-	TArray<FVector> totalPath;
-	totalPath.Add(FVector(current, 0));
-	while (cameFrom.Contains(current)) {
-		UE_LOG(LogTemp, Warning, TEXT("%f %f"), current[0], current[1]);
-		current = cameFrom[current];
-		totalPath.Add(FVector(current, 0));
-	}
-	UE_LOG(LogTemp, Warning, TEXT("%f %f"), current[0], current[1]);
-
-	return totalPath;
-}
-
-void ARRT::getNeighbours(TQueue<FVector2D> & neighbours, TArray<TArray<int32>> map, FVector2D node, int32 numNeighbours)
-{
-	float x = node[0];
-	float y = node[1];
-
-	if (x != 0 && map[y][x - 1] != 1) {
-		neighbours.Enqueue(FVector2D(x - 1, y));
-	}
-	if (x != map[0].Num() - 1 && map[y][x + 1] != 1) {
-		neighbours.Enqueue(FVector2D(x + 1, y));
-	}
-	if (y != 0 && map[y - 1][x] != 1) {
-		neighbours.Enqueue(FVector2D(x, y - 1));
-	}
-	if (y != map.Num() - 1 && map[y + 1][x] != 1) {
-		neighbours.Enqueue(FVector2D(x, y + 1));
-	}
-
-	if (numNeighbours != 4) {
-		if (x != 0 && y != 0 && map[y - 1][x - 1] != 1) {		// Up left
-			if (map[y][x - 1] == 0 || map[y - 1][x] == 0) {
-				neighbours.Enqueue(FVector2D(x - 1, y - 1));
-			}
-		}
-		if (x != map[0].Num() - 1 && y != 0 && map[y - 1][x + 1] != 1) {	// Up right
-			if (map[y][x + 1] == 0 || map[y - 1][x] == 0) {
-				neighbours.Enqueue(FVector2D(x + 1, y - 1));
-			}
-		}
-		if (x != 0 && y != map.Num() - 1 && map[y + 1][x - 1] != 1) {	// Down left
-			if (map[y][x - 1] == 0 || map[y + 1][x] == 0) {
-				neighbours.Enqueue(FVector2D(x - 1, y + 1));
-			}
-		}
-		if (x != map[0].Num() - 1 && y != map.Num() - 1 && map[y + 1][x + 1] != 1) {	// Down left
-			if (map[y][x + 1] == 0 || map[y + 1][x] == 0) {
-				neighbours.Enqueue(FVector2D(x + 1, y + 1));
-			}
-		}
-
-		if (numNeighbours != 8) {
-			if (x != 0 && y > 1 && map[y - 2][x - 1] != 1) {	// Up up left
-				if (map[y - 1][x] == 0 && map[y - 1][x - 1] == 0) {
-					neighbours.Enqueue(FVector2D(x - 1, y - 2));
-				}
-			}
-			if (x != 0 && y < map.Num() - 2 && map[y + 2][x - 1] != 1) {	// Down down left
-				if (map[y + 1][x] == 0 && map[y + 1][x - 1] == 0) {
-					neighbours.Enqueue(FVector2D(x - 1, y + 2));
-				}
-			}
-
-			if (x > 1 && y != 0 && map[y - 1][x - 2] != 1) {	// Up left left
-				if (map[y][x - 1] == 0 && map[y - 1][x - 1] == 0) {
-					neighbours.Enqueue(FVector2D(x - 2, y - 1));
-				}
-			}
-			if (x > 1 && y < map.Num() - 1 && map[y + 1][x - 2] != 1) {	// Down left left
-				if (map[y][x - 1] == 0 && map[y + 1][x - 1] == 0) {
-					neighbours.Enqueue(FVector2D(x - 2, y + 1));
-				}
-			}
-
-			if (x < map.Num() - 1 && y > 1 && map[y - 2][x + 1] != 1) {	// Up up right
-				if (map[y - 1][x] == 0 && map[y - 1][x + 1] == 0) {
-					neighbours.Enqueue(FVector2D(x + 1, y - 2));
-				}
-			}
-			if (x < map.Num() - 1 && y < map.Num() - 2 && map[y + 2][x + 1] != 1) {	// Down down right
-				if (map[y + 1][x] == 0 && map[y + 1][x + 1] == 0) {
-					neighbours.Enqueue(FVector2D(x + 1, y + 2));
-				}
-			}
-
-			if (x < map.Num() - 2 && y > 0 && map[y - 1][x + 2] != 1) {	// Up right right
-				if (map[y][x + 1] == 0 && map[y - 1][x + 1] == 0) {
-					neighbours.Enqueue(FVector2D(x + 2, y - 1));
-				}
-			}
-			if (x < map.Num() - 2 && y < map.Num() - 1 && map[y + 1][x + 2] != 1) {	// Down right right
-				if (map[y][x + 1] == 0 && map[y + 1][x + 1] == 0) {
-					neighbours.Enqueue(FVector2D(x + 2, y + 1));
-				}
-			}
-		}
-	}
 }
