@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Settings.h"
 #include "AIController.h"
 #include "RRT.generated.h"
 
@@ -40,7 +41,7 @@ private:
 
 	static TArray<FVector> makePath(TArray<Node> nodes);
 
-	static TArray<Node> findPath(FVector2D start, FVector2D goal, TArray<FVector2D> freeSpace, TArray<TArray<int32>> map);
+	static TArray<Node> findPath(FVector2D start, FVector2D goal, TArray<FVector2D> freeSpace, TArray<TArray<float>> map);
 
 	static bool goTowards(Node * node, FVector2D from, FVector2D to, TArray<FVector2D> freeSpace);
 
@@ -48,9 +49,5 @@ private:
 
 	static FVector2D getRandomPoint(TArray<FVector2D> points);
 	
-	static TArray<FVector2D> getFreeSpace(TArray<TArray<int32>> map);
-	
-	static TArray<TArray<int32>> readData(FString fileName);
-
-	static void writePathToFile(TArray<FVector> path, FString fileName);
+	static TArray<FVector2D> getFreeSpace(TArray<TArray<float>> map);
 };

@@ -11,18 +11,14 @@
 #include "CoreMisc.h"
 #include <limits>
 
-static FString fileMap = "discObst.txt";
-static FString filePositions = "positions.txt";
-static FString fileOutName = "discData.txt";
-
 TArray<FVector> AAStar::generate_path(int32 n)
 {
 	if (n != 4 && n != 8 && n != 16) {
 		throw std::invalid_argument("n has to be 4, 8 or 16");
 	}
 
-	TArray<TArray<int32>> map = readData(fileMap);
-	TArray<TArray<int32>> positions = readData(filePositions);
+	TArray<TArray<float>> map = readData(fileMap);
+	TArray<TArray<float>> positions = readData(filePositions);
 
 	FVector2D start = FVector2D(positions[0][0] - 1, positions[0][1] - 1);
 	FVector2D goal = FVector2D(positions[1][0] - 1, positions[1][1] - 1);
@@ -98,48 +94,6 @@ int32 AAStar::findLowestFScore(TArray<FVector2D> openSet, TArray<TArray<float>> 
 	return lowestIndex;
 }
 
-TArray<TArray<int>> AAStar::readData(FString fileName)
-{
-	TArray<FString> strArray;
-	FString projectDir = FPaths::GameDir();
-	projectDir += "Input Data/" + fileName;
-	FFileHelper::LoadANSITextFileToStrings(*projectDir, NULL, strArray);
-
-	TArray<TArray<int32>> data;
-	for (FString line : strArray) {
-		if (line.Trim().IsEmpty()) continue;
-
-		TArray<int32> row;
-
-		FString solid;
-
-		while (line.Split(FString("\t"), &solid, &line)) {
-			row.Add(FCString::Atoi(*solid));
-		}
-
-		row.Add(FCString::Atoi(*line));
-
-		data.Add(row);
-	}
-
-	return data;
-}
-
-void AAStar::writePathToFile(TArray<FVector> path, FString fileName)
-{
-	FString str;
-
-	for (int32 c = path.Num() - 1; c >= 0; c--) {
-		str += FString::SanitizeFloat(path[c][0]+1) + "\t" + FString::SanitizeFloat(path[c][1]+1) + "\n";
-	}
-
-	FString projectDir = FPaths::GameDir();
-	projectDir += "Output Data/" + fileName;
-	FFileHelper::
-	FFileHelper::SaveStringToFile(str, *projectDir);
-
-}
-
 TArray<TArray<float>> AAStar::infMap(int32 rows, int32 columns)
 {
 	TArray<TArray<float>> infMap;
@@ -169,18 +123,20 @@ float AAStar::heuristic_cost_estimate(FVector2D start, FVector2D goal)
 TArray<FVector> AAStar::reconstruct_path(TMap<FVector2D, FVector2D> cameFrom, FVector2D current)
 {
 	TArray<FVector> totalPath;
-	totalPath.Add(FVector(current, 0));
+	FVector location(-current.Y * gridSize + (gridSize / 2), current.X * gridSize + (gridSize / 2), 0);
+	totalPath.Add(location);
 	while (cameFrom.Contains(current)) {
 		UE_LOG(LogTemp, Warning, TEXT("%f %f"), current[0], current[1]);
 		current = cameFrom[current];
-		totalPath.Add(FVector(current, 0));
+		location = FVector(-current.Y * gridSize + (gridSize / 2), current.X * gridSize + (gridSize/2), 0);
+		totalPath.Insert(location, 0);
 	}
 	UE_LOG(LogTemp, Warning, TEXT("%f %f"), current[0], current[1]);
 
 	return totalPath;
 }
 
-void AAStar::getNeighbours(TQueue<FVector2D> & neighbours, TArray<TArray<int32>> map, FVector2D node, int32 numNeighbours)
+void AAStar::getNeighbours(TQueue<FVector2D> & neighbours, TArray<TArray<float>> map, FVector2D node, int32 numNeighbours)
 {
 	float x = node[0];
 	float y = node[1];

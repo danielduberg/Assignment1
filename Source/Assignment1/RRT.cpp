@@ -13,16 +13,12 @@
 #include <stdlib.h>
 #include <time.h>
 
-static FString fileMap = "discObst.txt";
-static FString filePositions = "positions.txt";
-static FString fileOutName = "discData.txt";
-
 TArray<FVector> ARRT::generate_path(int32 n)
 {
 	srand(time(NULL));
 
-	TArray<TArray<int32>> map = readData(fileMap);
-	TArray<TArray<int32>> positions = readData(filePositions);
+	TArray<TArray<float>> map = readData(fileMap);
+	TArray<TArray<float>> positions = readData(filePositions);
 
 	FVector2D start = FVector2D(positions[0][0] - 1, positions[0][1] - 1);
 
@@ -50,7 +46,7 @@ TArray<FVector> ARRT::makePath(TArray<Node> nodes)
 	return path;
 }
 
-TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVector2D> freeSpace, TArray<TArray<int32>> map)
+TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVector2D> freeSpace, TArray<TArray<float>> map)
 {
 	TArray<Node *> rrt;
 
@@ -149,7 +145,7 @@ bool ARRT::goTowards(Node * node, FVector2D from, FVector2D to, TArray<FVector2D
 
 ARRT::Node * ARRT::getClosest(TArray<Node *> rrt, FVector2D point)
 {
-	int32 bestIndex;
+	int32 bestIndex = 0;
 	float distance = std::numeric_limits<float>::infinity();
 	
 	float tempDistance;
@@ -172,7 +168,7 @@ FVector2D ARRT::getRandomPoint(TArray<FVector2D> points)
 	return point;
 }
 
-TArray<FVector2D> ARRT::getFreeSpace(TArray<TArray<int32>> map)
+TArray<FVector2D> ARRT::getFreeSpace(TArray<TArray<float>> map)
 {
 	TArray<FVector2D> freeSpace;
 
@@ -185,46 +181,4 @@ TArray<FVector2D> ARRT::getFreeSpace(TArray<TArray<int32>> map)
 	}
 
 	return freeSpace;
-}
-
-TArray<TArray<int>> ARRT::readData(FString fileName)
-{
-	TArray<FString> strArray;
-	FString projectDir = FPaths::GameDir();
-	projectDir += "Input Data/" + fileName;
-	FFileHelper::LoadANSITextFileToStrings(*projectDir, NULL, strArray);
-
-	TArray<TArray<int32>> data;
-	for (FString line : strArray) {
-		if (line.Trim().IsEmpty()) continue;
-
-		TArray<int32> row;
-
-		FString solid;
-
-		while (line.Split(FString("\t"), &solid, &line)) {
-			row.Add(FCString::Atoi(*solid));
-		}
-
-		row.Add(FCString::Atoi(*line));
-
-		data.Add(row);
-	}
-
-	return data;
-}
-
-void ARRT::writePathToFile(TArray<FVector> path, FString fileName)
-{
-	FString str;
-
-	for (int32 c = 0; c < path.Num(); c++) {
-		str += FString::SanitizeFloat(path[c][0] + 1) + "\t" + FString::SanitizeFloat(path[c][1] + 1) + "\n";
-	}
-
-	FString projectDir = FPaths::GameDir();
-	projectDir += "Output Data/" + fileName;
-	FFileHelper::
-		FFileHelper::SaveStringToFile(str, *projectDir);
-
 }
