@@ -4,6 +4,10 @@
 
 #include <iostream>
 
+/*
+ * Variables
+ */
+
 static const float gridSize = 100;							// Size of each grid in the game
 static const float meshSide = 100;							// Size of a side of a cube mesh
 static const float characterHeight = 90;					// Height of the character mesh
@@ -12,11 +16,31 @@ static const FString fileMap = "obstacles.txt";
 static const FString filePositions = "positions.txt";
 static const FString fileOutName = "path.txt";
 
-static bool mapRead = false;
-static TArray<TArray<float>> map;
 static bool binMap;
 
+static bool mapRead = false;
+static TArray<TArray<float>> map;
+
+static bool positionsRead = false;
+static TArray<TArray<float>> positions;
+
+
+/*
+ * Functions
+ */
+
 TArray<TArray<float>> readData(const FString fileName);
+
+TArray<TArray<float>> & getMap();
+
+TArray<TArray<float>> & getPositions();
+
+void writePathToFile(TArray<FVector> path, const FString fileName);
+
+
+/*
+ * Implementations
+ */
 
 TArray<TArray<float>> & getMap()
 {
@@ -26,6 +50,16 @@ TArray<TArray<float>> & getMap()
 	}
 
 	return map;
+}
+
+TArray<TArray<float>> & getPositions()
+{
+	if (!positionsRead) {
+		positions = readData(filePositions);
+		positionsRead = true;
+	}
+
+	return positions;
 }
 
 TArray<TArray<float>> readData(const FString fileName)
