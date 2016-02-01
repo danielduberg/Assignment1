@@ -26,5 +26,5 @@ private:
 
 	static TArray<FVector> reconstruct_path(TMap<FVector2D, FVector2D> cameFrom, FVector2D current);
 
-	static void getNeighbours(TQueue<FVector2D> & neighbours, TArray<TArray<float>> map, FVector2D node, int32 numNeighbours);
+	static void getNeighbours(TQueue<FVector2D> & neighbours, FVector2D node, int32 numNeighbours);
 };

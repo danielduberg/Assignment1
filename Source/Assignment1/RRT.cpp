@@ -17,16 +17,16 @@ TArray<FVector> ARRT::generate_path(int32 n)
 {
 	srand(time(NULL));
 
-	TArray<TArray<float>> map = readData(fileMap);
-	TArray<TArray<float>> positions = readData(filePositions);
+	getMap();
+	getPositions();
 
 	FVector2D start = FVector2D(positions[0][0] - 1, positions[0][1] - 1);
 
 	FVector2D goal = FVector2D(positions[1][0] - 1, positions[1][1] - 1);
 
-	TArray<FVector2D> freeSpace = getFreeSpace(map);
+	TArray<FVector2D> freeSpace = getFreeSpace();
 
-	TArray<Node> pathNode = findPath(start, goal, freeSpace, map);
+	TArray<Node> pathNode = findPath(start, goal, freeSpace);
 
 	TArray<FVector> path = makePath(pathNode);
 
@@ -46,7 +46,7 @@ TArray<FVector> ARRT::makePath(TArray<Node> nodes)
 	return path;
 }
 
-TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVector2D> freeSpace, TArray<TArray<float>> map)
+TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVector2D> freeSpace)
 {
 	TArray<Node *> rrt;
 
@@ -168,7 +168,7 @@ FVector2D ARRT::getRandomPoint(TArray<FVector2D> points)
 	return point;
 }
 
-TArray<FVector2D> ARRT::getFreeSpace(TArray<TArray<float>> map)
+TArray<FVector2D> ARRT::getFreeSpace()
 {
 	TArray<FVector2D> freeSpace;
 

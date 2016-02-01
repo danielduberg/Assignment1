@@ -41,7 +41,7 @@ private:
 
 	static TArray<FVector> makePath(TArray<Node> nodes);
 
-	static TArray<Node> findPath(FVector2D start, FVector2D goal, TArray<FVector2D> freeSpace, TArray<TArray<float>> map);
+	static TArray<Node> findPath(FVector2D start, FVector2D goal, TArray<FVector2D> freeSpace);
 
 	static bool goTowards(Node * node, FVector2D from, FVector2D to, TArray<FVector2D> freeSpace);
 
@@ -49,5 +49,5 @@ private:
 
 	static FVector2D getRandomPoint(TArray<FVector2D> points);
 	
-	static TArray<FVector2D> getFreeSpace(TArray<TArray<float>> map);
+	static TArray<FVector2D> getFreeSpace();
 };

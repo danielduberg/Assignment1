@@ -8,7 +8,7 @@ AActor * AMapCreator::createMap(bool binary, ACameraActor * camera, AStaticMeshA
 	binMap = binary;
 
 	// Read Character start position
-	TArray<TArray<float>> positions = getPositions();
+	getPositions();
 	start = FVector2D(positions[0][0] - 1, positions[0][1] - 1);
 
 	// TODO: KOLLA ATT DETTA FORTFARANDE STÄMMER FÖR POLYGONAL!

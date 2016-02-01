@@ -17,8 +17,8 @@ TArray<FVector> AAStar::generate_path(int32 n)
 		throw std::invalid_argument("n has to be 4, 8 or 16");
 	}
 
-	TArray<TArray<float>> map = readData(fileMap);
-	TArray<TArray<float>> positions = readData(filePositions);
+	getMap();
+	getPositions();
 
 	FVector2D start = FVector2D(positions[0][0] - 1, positions[0][1] - 1);
 	FVector2D goal = FVector2D(positions[1][0] - 1, positions[1][1] - 1);
@@ -51,7 +51,7 @@ TArray<FVector> AAStar::generate_path(int32 n)
 		closedSet.Add(current);
 
 		TQueue<FVector2D> neighbours;
-		getNeighbours(neighbours, map, current, n);
+		getNeighbours(neighbours, current, n);
 
 		FVector2D neighbour;
 		while (neighbours.Dequeue(neighbour)) {
@@ -136,7 +136,7 @@ TArray<FVector> AAStar::reconstruct_path(TMap<FVector2D, FVector2D> cameFrom, FV
 	return totalPath;
 }
 
-void AAStar::getNeighbours(TQueue<FVector2D> & neighbours, TArray<TArray<float>> map, FVector2D node, int32 numNeighbours)
+void AAStar::getNeighbours(TQueue<FVector2D> & neighbours, FVector2D node, int32 numNeighbours)
 {
 	float x = node[0];
 	float y = node[1];

@@ -29,13 +29,13 @@ static TArray<TArray<float>> positions;
  * Functions
  */
 
-TArray<TArray<float>> readData(const FString fileName);
+static TArray<TArray<float>> readData(const FString fileName);
 
-TArray<TArray<float>> & getMap();
+static TArray<TArray<float>> & getMap();
 
-TArray<TArray<float>> & getPositions();
+static TArray<TArray<float>> & getPositions();
 
-void writePathToFile(TArray<FVector> path, const FString fileName);
+static void writePathToFile(TArray<FVector> path, const FString fileName);
 
 
 /*
