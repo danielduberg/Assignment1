@@ -54,7 +54,7 @@ TArray<TArray<float>> & getMap()
 {
 	if (!mapRead) {
 		map = readData(fileMap);
-		map = makeDiscreteMap();
+		//map = makeDiscreteMap();
 		mapRead = true;
 	}
 

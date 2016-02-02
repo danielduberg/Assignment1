@@ -13,8 +13,7 @@ UCLASS()
 class ASSIGNMENT1_API AMapCreator : public ALevelScriptActor {
 	GENERATED_BODY()
 
-	TArray<TArray<int>> map;							// Obstacle map F
-	FVector2D start;									// Starting position
+	float height, width;
 	TSubclassOf<class UObject> blockBP;					// For spawning blocks
 
 	public:
@@ -22,7 +21,5 @@ class ASSIGNMENT1_API AMapCreator : public ALevelScriptActor {
 		AActor * createMap(bool binary, ACameraActor * camera, AStaticMeshActor * floor);
 
 	private:
-	FVector binaryMap(UWorld* const world);
-
-	//FVector polygonalMap();
+	FVector spawnMap(UWorld* const world);
 };
