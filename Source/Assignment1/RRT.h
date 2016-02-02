@@ -21,6 +21,7 @@ private:
 		float velocity;
 		float acceleration;
 		float angle;
+		float time;
 	};
 
 	struct State {

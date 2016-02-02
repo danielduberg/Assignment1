@@ -68,6 +68,11 @@ FVector AMapCreator::binaryMap(UWorld* const world)
 	}
 
 	// Spawn character
-	return FVector(-start[0] * gridSize + (gridSize / 2),
-				   start[1] * gridSize + (gridSize / 2), 0);
+	if (binMap) {
+		return FVector(-start[0] * gridSize + (gridSize / 2),
+			start[1] * gridSize + (gridSize / 2), 0);
+	} else {
+		return FVector(-start[0] * 20,
+			start[1] * 20, 0);
+	}
 }

@@ -29,12 +29,12 @@ TArray<FVector> AAStar::generate_path(int32 n)
 
 	TMap<FVector2D, FVector2D> cameFrom;	// The map of navigated nodes.
 
-	TArray<TArray<float>> gScore = infMap(map.Num(), map[0].Num());	// map with default value of Infinity
+	TArray<TArray<float>> gScore = infMap(map[0].Num(), map.Num());	// map with default value of Infinity
 
 	gScore[start[0]][start[1]] = 0;	// Cost from start along best known path.
 									// Estimated total cost from start to goal through y.
 
-	TArray<TArray<float>> fScore = infMap(map.Num(), map[0].Num());	// map with default value of Infinity
+	TArray<TArray<float>> fScore = infMap(map[0].Num(), map.Num());	// map with default value of Infinity
 
 	fScore[start[0]][start[1]] = heuristic_cost_estimate(start, goal);
 
@@ -43,7 +43,6 @@ TArray<FVector> AAStar::generate_path(int32 n)
 		FVector2D current = openSet[index]; // openSet.Pop();	// the node in OpenSet having the lowest f_score[] value
 		if (current == goal) {
 			TArray<FVector> path = reconstruct_path(cameFrom, goal);
-			writePathToFile(path, fileOutName);
 			return path;
 		}
 
@@ -122,7 +121,9 @@ float AAStar::heuristic_cost_estimate(FVector2D start, FVector2D goal)
 
 TArray<FVector> AAStar::reconstruct_path(TMap<FVector2D, FVector2D> cameFrom, FVector2D current)
 {
+	TArray<FVector> tempPath;
 	TArray<FVector> totalPath;
+	tempPath.Add(FVector(current.X, current.Y, 0));
 	FVector location(-current.Y * gridSize + (gridSize / 2), current.X * gridSize + (gridSize / 2), 0);
 	totalPath.Add(location);
 	while (cameFrom.Contains(current)) {
@@ -130,8 +131,11 @@ TArray<FVector> AAStar::reconstruct_path(TMap<FVector2D, FVector2D> cameFrom, FV
 		current = cameFrom[current];
 		location = FVector(-current.Y * gridSize + (gridSize / 2), current.X * gridSize + (gridSize/2), 0);
 		totalPath.Insert(location, 0);
+		tempPath.Insert(FVector(current.X, current.Y, 0), 0);
 	}
 	UE_LOG(LogTemp, Warning, TEXT("%f %f"), current[0], current[1]);
+
+	writePathToFile(tempPath, fileOutName);
 
 	return totalPath;
 }
