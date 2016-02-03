@@ -64,18 +64,22 @@ TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVecto
 {
 	TArray<Node *> rrt;
 
+	TArray<FVector2D> pickFrom = freeSpace;
+
 	Node * current = new Node;
 	current->pos = start;
 	current->cameFrom = nullptr;
 	current->cost = 0;
+
+	pickFrom.RemoveSingle(FVector2D(int32(current->pos.X), int32(current->pos.Y)));
 
 	rrt.Add(current);
 
 	FVector2D randomPoint;
 
 	int32 iter = 1000;
-	for (int32 i = 0; i < iter; i++) {
-		randomPoint = getRandomPoint(freeSpace);
+	for (int32 i = 0; i < iter && pickFrom.Num() > 0; i++) {
+		randomPoint = getRandomPoint(pickFrom);
 
 		Node * closest = getClosest(rrt, randomPoint);
 
@@ -85,9 +89,15 @@ TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVecto
 			current->cameFrom = closest;
 			current->cost = closest->cost + FVector2D::Distance(closest->pos, current->pos);
 
-			TArray<Node *> nearNodes = getNear(rrt, current, FVector2D::Distance(closest->pos, current->pos));
+			pickFrom.RemoveSingle(FVector2D(int32(current->pos.X), int32(current->pos.Y)));
+
+			TArray<Node *> nearNodes = getNear(rrt, current, 2 * FVector2D::Distance(closest->pos, current->pos));
 			
+			UE_LOG(LogTemp, Warning, TEXT("Near nodes: %d"), nearNodes.Num());
+
 			Node * nodeMin = closest;
+
+			// Check if there is a closer node
 			for (int32 c = 0; c < nearNodes.Num(); c++) {
 				if (collisionFree(nearNodes[c], current, freeSpace) && nearNodes[c]->cost < nodeMin->cost) {
 					nodeMin = nearNodes[c];
@@ -100,8 +110,11 @@ TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVecto
 			// Adopt children
 			for (int32 c = 0; c < nearNodes.Num(); c++) {
 				if (collisionFree(current, nearNodes[c], freeSpace) && current->cost + FVector2D::Distance(current->pos, nearNodes[c]->pos) < nearNodes[c]->cost) {
+					UE_LOG(LogTemp, Warning, TEXT("Adopted!"));
 					nearNodes[c]->cameFrom = current;
 					nearNodes[c]->cost = current->cost + FVector2D::Distance(current->pos, nearNodes[c]->pos);
+				} else {
+					UE_LOG(LogTemp, Warning, TEXT("No thanks!"));
 				}
 			}
 
@@ -167,7 +180,7 @@ TArray<ARRT::Node *> ARRT::getNear(TArray<Node *> rrt, Node * node, float radius
 {
 	TArray<Node *> nearNodes;
 	for (int32 c = 0; c < rrt.Num(); c++) {
-		if (FVector2D::Distance(rrt[c]->pos, node->pos) < radius) {
+		if (FVector2D::Distance(rrt[c]->pos, node->pos) <= radius) {
 			nearNodes.Add(rrt[c]);
 		}
 	}

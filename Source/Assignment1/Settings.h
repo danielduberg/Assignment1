@@ -22,6 +22,7 @@ static bool binMap;
 
 static bool mapRead = false;
 static TArray<TArray<float>> map;
+static TArray<FVector2D> points;
 
 static bool positionsRead = false;
 static TArray<TArray<float>> positions;
@@ -55,7 +56,7 @@ TArray<TArray<float>> & getMap()
 {
 	if (!mapRead) {
 		map = readData(fileMap);
-		map = makeDiscreteMap();
+		//map = makeDiscreteMap();
 		mapRead = true;
 	}
 
