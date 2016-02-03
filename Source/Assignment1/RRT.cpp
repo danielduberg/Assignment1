@@ -67,13 +67,64 @@ TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVecto
 	Node * current = new Node;
 	current->pos = start;
 	current->cameFrom = nullptr;
+	current->cost = 0;
 
 	rrt.Add(current);
 
-	//freeSpace.RemoveSingle(start);
-
 	FVector2D randomPoint;
 
+	int32 iter = 1000;
+	for (int32 i = 0; i < iter; i++) {
+		randomPoint = getRandomPoint(freeSpace);
+
+		Node * closest = getClosest(rrt, randomPoint);
+
+		Node * newCurrent = new Node;
+		if (goTowards(newCurrent, closest->pos, randomPoint, freeSpace)) {
+			current = newCurrent;
+			current->cameFrom = closest;
+			current->cost = closest->cost + FVector2D::Distance(closest->pos, current->pos);
+
+			TArray<Node *> nearNodes = getNear(rrt, current, FVector2D::Distance(closest->pos, current->pos));
+			
+			Node * nodeMin = closest;
+			for (int32 c = 0; c < nearNodes.Num(); c++) {
+				if (collisionFree(nearNodes[c], current, freeSpace) && nearNodes[c]->cost < nodeMin->cost) {
+					nodeMin = nearNodes[c];
+				}
+			}
+
+			current->cameFrom = nodeMin;
+			current->cost = nodeMin->cost + FVector2D::Distance(nodeMin->pos, current->pos);
+
+			// Adopt children
+			for (int32 c = 0; c < nearNodes.Num(); c++) {
+				if (collisionFree(current, nearNodes[c], freeSpace) && current->cost + FVector2D::Distance(current->pos, nearNodes[c]->pos) < nearNodes[c]->cost) {
+					nearNodes[c]->cameFrom = current;
+					nearNodes[c]->cost = current->cost + FVector2D::Distance(current->pos, nearNodes[c]->pos);
+				}
+			}
+
+			rrt.Add(current);
+		}
+		else {
+			delete newCurrent;
+		}
+	}
+
+	// Check if we can reach the goal
+	bool reachGoal = false;
+	for (int32 c = 0; c < rrt.Num(); c++) {
+		if (rrt[c]->pos.Equals(goal, 3)) {
+			current = rrt[c];
+			reachGoal = true;
+			break;
+		}
+	}
+
+	// TODO: If not reach goal, continue...
+
+	/*
 	while (!current->pos.Equals(goal, 3) && freeSpace.Num() > 0) {
 		randomPoint = getRandomPoint(freeSpace);
 
@@ -96,6 +147,7 @@ TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVecto
 		}
 		UE_LOG(LogTemp, Warning, TEXT("!Hej då"));
 	}
+	*/
 
 	UE_LOG(LogTemp, Warning, TEXT("DONE! Current: %f %f"), current->pos[0], current->pos[1]);
 
@@ -109,6 +161,46 @@ TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVecto
 	}
 	
 	return path;
+}
+
+TArray<ARRT::Node *> ARRT::getNear(TArray<Node *> rrt, Node * node, float radius)
+{
+	TArray<Node *> nearNodes;
+	for (int32 c = 0; c < rrt.Num(); c++) {
+		if (FVector2D::Distance(rrt[c]->pos, node->pos) < radius) {
+			nearNodes.Add(rrt[c]);
+		}
+	}
+
+	return nearNodes;
+}
+
+bool ARRT::collisionFree(Node * node1, Node * node2, TArray<FVector2D> freeSpace)
+{
+	FVector2D from = node1->pos;
+	FVector2D to = node2->pos;
+
+	FVector2D line = to - from;
+
+	if (FVector2D::Distance(from, to) > 10) {
+		line.Normalize();
+		line *= 10;
+	}
+
+	float phi = 0.001;
+	float n = 0;
+	FVector2D test;
+	while (n <= 1) {
+		test = scaleToIndex * (from + n * line);
+		if (freeSpace.Contains(FVector2D(int32(test.X), int32(test.Y)))) {
+			n += phi;
+		}
+		else {
+			return false;
+		}
+	}
+
+	return true;
 }
 
 bool ARRT::goTowards(Node * node, FVector2D from, FVector2D to, TArray<FVector2D> freeSpace)

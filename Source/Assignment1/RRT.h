@@ -37,9 +37,14 @@ private:
 		TArray<TTuple<Node, Input>> children;
 		Input input;
 		State state;
+		float cost;
 		// TODO: Input
 		// TODO: State
 	};
+
+	static TArray<Node *> getNear(TArray<Node *> rrt, Node * node, float radius);
+
+	static bool collisionFree(Node * node1, Node * node2, TArray<FVector2D> freeSpace);
 
 	static TArray<FVector> makePath2(TArray<FVector> path);
 
