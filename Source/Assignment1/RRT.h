@@ -13,7 +13,7 @@ class ASSIGNMENT1_API ARRT : public AAIController
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "RRT")
-		static TArray<FVector> generate_path(int32 n);
+	static TArray<FVector> generate_path();
 
 private:
 	struct Input {
@@ -35,10 +35,13 @@ private:
 		FVector2D pos;
 		Node * cameFrom = nullptr;
 		TArray<TTuple<Node, Input>> children;
+		Input input;
 		State state;
 		// TODO: Input
 		// TODO: State
 	};
+
+	static TArray<FVector> makePath2(TArray<FVector> path);
 
 	static TArray<FVector> makePath(TArray<Node> nodes);
 

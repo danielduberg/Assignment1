@@ -26,8 +26,9 @@ static TArray<TArray<float>> map;
 static bool positionsRead = false;
 static TArray<TArray<float>> positions;
 
-static const float scaleFactor = 0.1;
-static const float scaleToIndex = 1 / scaleFactor;
+static const float scaleFactor = 1;
+static const float phi = 0.01;
+static float scaleToIndex = 1;
 static const float meshScale = meshSide * scaleFactor;
 
 
@@ -54,7 +55,7 @@ TArray<TArray<float>> & getMap()
 {
 	if (!mapRead) {
 		map = readData(fileMap);
-		//map = makeDiscreteMap();
+		map = makeDiscreteMap();
 		mapRead = true;
 	}
 
@@ -103,7 +104,7 @@ void writePathToFile(TArray<FVector> path, const FString fileName)
 	FString str;
 
 	for (int32 c = 0; c < path.Num(); c++) {
-		str += FString::SanitizeFloat(path[c][0] + 1) + "\t" + FString::SanitizeFloat(path[c][1] + 1) + "\n";
+		str += FString::SanitizeFloat(path[c][0] + 1) + "\t" + FString::SanitizeFloat(path[c][1] + 1) + "\r\n";
 	}
 
 	FString projectDir = FPaths::GameDir();
@@ -113,6 +114,8 @@ void writePathToFile(TArray<FVector> path, const FString fileName)
 
 static TArray<TArray<float>> makeDiscreteMap()
 {
+	scaleToIndex = 1 / scaleFactor;
+
 	TArray<float> x;
 	TArray<float> y;
 	TArray<float> button;
@@ -136,9 +139,9 @@ static TArray<TArray<float>> makeDiscreteMap()
 	yMax += expansion;
 
 	TArray<TArray<float>> newMap;
-	for (int32 c = 0; c < yMax; c++) {
+	for (int32 c = 0; c < yMax * scaleToIndex; c++) {
 		TArray<float> row;
-		for (int32 g = 0; g < xMax; g++) {
+		for (int32 g = 0; g < xMax * scaleToIndex; g++) {
 			row.Add(0);
 		}
 		newMap.Add(row);
@@ -167,16 +170,26 @@ static TArray<TArray<float>> makeDiscreteMap()
 		}
 
 		float n = 0;
-		float phi = 0.01;
 
 		while (n <= 1) {
 			FVector2D index = startLine + n * (endLine - startLine);
 
-			newMap[int32(index.Y) - 1][int32(index.X) - 1] = 1;
+			newMap[(index.Y - 1) * scaleToIndex][(index.X - 1) * scaleToIndex] = 1;
 
 			n += phi;
 		}
 	}
+	/*
+	for (int32 c = 0; c < newMap.Num(); c++) {
+		FString row;
+		for (int32 g = 0; g < newMap[c].Num(); g++) {
+			row.AppendInt(newMap[c][g]);
+			row.Append(" ");
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *row);
+	}
+	*/
 
 	return newMap;
 }

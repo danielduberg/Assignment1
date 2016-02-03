@@ -70,5 +70,5 @@ FVector AMapCreator::spawnMap(UWorld* const world)
 		yLoc += (gridSize / 2);
 	}
 
-	return FVector(xLoc, yLoc, 0);
+	return scaleToIndex * FVector(xLoc, yLoc, 0);
 }

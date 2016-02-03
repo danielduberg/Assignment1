@@ -18,8 +18,11 @@ class ASSIGNMENT1_API AMapCreator : public ALevelScriptActor {
 
 	public:
 	UFUNCTION(BlueprintCallable, Category = "Map Creation")
-		AActor * createMap(bool binary, ACameraActor * camera, AStaticMeshActor * floor);
+	AActor * createMap(bool binary, ACameraActor * camera, AStaticMeshActor * floor);
 
 	private:
 	FVector spawnMap(UWorld* const world);
+	FVector binaryMap(UWorld* const world);
+
+	//FVector polygonalMap();
 };

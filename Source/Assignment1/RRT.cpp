@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-TArray<FVector> ARRT::generate_path(int32 n)
+TArray<FVector> ARRT::generate_path()
 {
 	srand(time(NULL));
 
@@ -30,8 +30,22 @@ TArray<FVector> ARRT::generate_path(int32 n)
 
 	TArray<FVector> path = makePath(pathNode);
 
-	writePathToFile(path, "Test.txt");
+	path.Add(FVector(goal, 0));
 
+	writePathToFile(path, "path.txt");
+
+	path = makePath2(path);
+
+	return path;
+}
+
+TArray<FVector> ARRT::makePath2(TArray<FVector> path)
+{
+	for (int32 c = 0; c < path.Num(); c++) {
+		path[c] = 100 * path[c];
+		path[c] = FVector(path[c].Y, path[c].X, 0);
+	}
+	
 	return path;
 }
 
@@ -56,11 +70,11 @@ TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVecto
 
 	rrt.Add(current);
 
-	freeSpace.RemoveSingle(start);
+	//freeSpace.RemoveSingle(start);
 
 	FVector2D randomPoint;
 
-	while (!current->pos.Equals(goal, 0.1) && freeSpace.Num() > 0) {
+	while (!current->pos.Equals(goal, 3) && freeSpace.Num() > 0) {
 		randomPoint = getRandomPoint(freeSpace);
 
 		Node * closest = getClosest(rrt, randomPoint);
@@ -75,7 +89,7 @@ TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVecto
 			UE_LOG(LogTemp, Warning, TEXT("Hej"));
 			current = newCurrent;
 			current->cameFrom = closest;
-			freeSpace.RemoveSingle(current->pos);
+			//freeSpace.RemoveSingle(current->pos);
 			rrt.Add(current);
 		} else {
 			delete newCurrent;
@@ -99,11 +113,40 @@ TArray<ARRT::Node> ARRT::findPath(FVector2D start, FVector2D goal, TArray<FVecto
 
 bool ARRT::goTowards(Node * node, FVector2D from, FVector2D to, TArray<FVector2D> freeSpace)
 {
+	FVector2D line = to - from;
 
+	if (FVector2D::Distance(from, to) > 10) {
+		line.Normalize();
+		line *= 10;
+	}
+
+	float phi = 0.001;
+	float n = 0;
+	FVector2D test;
+	while (n <= 1) {
+		test = scaleToIndex * (from + n * line);
+		if (freeSpace.Contains(FVector2D(int32 (test.X), int32 (test.Y)))) {
+			n += phi;
+		} else {
+			break;
+		}
+	}
+
+	if (n == 0) {
+		return false;
+	}
+
+	if (n > 1) {
+		n -= phi;
+	}
+
+	node->pos = test;
+
+	return true;
+
+	/*
 	float distance = std::numeric_limits<float>::infinity();
 	FVector2D best;
-
-	bool success = false;
 
 	FVector2D test = FVector2D(from[0] - 1, from[1]);
 	if (freeSpace.Contains(test)) {
@@ -141,6 +184,7 @@ bool ARRT::goTowards(Node * node, FVector2D from, FVector2D to, TArray<FVector2D
 	node->pos = best;
 
 	return success;
+	*/
 }
 
 ARRT::Node * ARRT::getClosest(TArray<Node *> rrt, FVector2D point)
