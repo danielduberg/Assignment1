@@ -23,6 +23,8 @@ static bool binMap;
 static bool mapRead = false;
 static TArray<TArray<float>> map;
 static TArray<FVector2D> points;
+static TArray<TArray<FVector2D>> edges;
+static TArray<FVector2D> vertices;
 
 static bool positionsRead = false;
 static TArray<TArray<float>> positions;
@@ -47,6 +49,9 @@ static void writePathToFile(TArray<FVector> path, const FString fileName);
 
 static TArray<TArray<float>> makeDiscreteMap();
 
+static TArray<TArray<FVector2D>> getEdges(TArray<TArray<float>> map);
+
+static TArray<FVector2D> getVertices(TArray<TArray<float>> map);
 
 /*
  * Implementations
@@ -56,11 +61,72 @@ TArray<TArray<float>> & getMap()
 {
 	if (!mapRead) {
 		map = readData(fileMap);
-		//map = makeDiscreteMap();
+
+		edges = getEdges(map);
+
+		vertices = getVertices(map);
+
+		map = makeDiscreteMap();
+
 		mapRead = true;
 	}
 
 	return map;
+}
+
+TArray<TArray<FVector2D>> getEdges(TArray<TArray<float>> map)
+{
+	TArray<TArray<FVector2D>> edges;
+
+	FVector2D init;
+	FVector2D startLine;
+	FVector2D endLine;
+	bool newObst = true;
+	for (int32 c = 0; c < map.Num(); c++) {
+		if (newObst) {
+			newObst = false;
+			init = FVector2D(map[c][0], map[c][1]);
+			startLine = FVector2D(map[c][0], map[c][1]);
+			endLine = FVector2D(map[c + 1][0], map[c + 1][1]);
+		}
+		else {
+			startLine = endLine;
+			if (map[c][2] == 1) {
+				endLine = FVector2D(map[c + 1][0], map[c + 1][1]);
+			}
+			else {
+				newObst = true;
+				endLine = init;
+			}
+		}
+
+		TArray<FVector2D> temp;
+		temp.Add(startLine);
+		temp.Add(endLine);
+		edges.Add(temp);
+	}
+
+	/*
+	for (int32 c = 0; c < edges.Num(); c++) {
+		UE_LOG(LogTemp, Warning, TEXT("Obstacle #%d:"), c+1);
+		for (int32 g = 0; g < edges[c].Num(); g++) {
+			UE_LOG(LogTemp, Warning, TEXT("\t(%f, %f)"), edges[c][g].X, edges[c][g].Y);
+		}
+	}
+	*/
+
+	return edges;
+}
+
+TArray<FVector2D> getVertices(TArray<TArray<float>> map)
+{
+	TArray<FVector2D> vertices;
+
+	for (int32 c = 0; c < map.Num(); c++) {
+		vertices.Add(FVector2D(map[c][0], map[c][1]));
+	}
+
+	return vertices;
 }
 
 TArray<TArray<float>> & getPositions()

@@ -234,3 +234,112 @@ void AAStar::getNeighbours(TQueue<FVector2D> & neighbours, FVector2D node, int32
 	}
 }
 
+
+
+
+/*
+Kinematic point model & diff. drive model
+*/
+
+#include "VisibilityGraph.h"
+
+TArray<FVector> AAStar::generate_path2()
+{
+	getMap();
+	getPositions();
+
+	FVector2D start = FVector2D(positions[0][0], positions[0][1]);
+	FVector2D goal = FVector2D(positions[1][0], positions[1][1]);
+
+	vertices.Add(start);
+	vertices.Add(goal);
+
+	getVisibilityGraph(edges, vertices);
+
+	TArray<FVector2D> closedSet;	// The set of nodes already evaluated.
+	TArray<FVector2D> openSet;		// The set of tentative nodes to be evaluated, initially containing the start node
+	openSet.Add(start);
+
+	TMap<FVector2D, FVector2D> cameFrom;	// The map of navigated nodes.
+
+	TMap<FVector2D, float> gScore = infMap();	// map with default value of Infinity
+
+	gScore[start] = 0;	// Cost from start along best known path.
+																	// Estimated total cost from start to goal through y.
+
+	TMap<FVector2D, float> fScore = infMap();	// map with default value of Infinity
+
+	fScore[start] = heuristic_cost_estimate(start, goal);
+
+	while (openSet.Num() > 0) {
+		int32 index = findLowestFScore(openSet, fScore);
+		FVector2D current = openSet[index]; // openSet.Pop();	// the node in OpenSet having the lowest f_score[] value
+		if (current == goal) {
+			TArray<FVector> path = reconstruct_path(cameFrom, goal);
+			return path;
+		}
+
+		openSet.RemoveAt(index);
+		closedSet.Add(current);
+
+		TQueue<FVector2D> neighbours;
+		getNeighbours(neighbours, current);
+
+		FVector2D neighbour;
+		while (neighbours.Dequeue(neighbour)) {
+			if (closedSet.Contains(neighbour)) {
+				continue;	// Ignore the neighbor which is already evaluated.
+			}
+
+			float tentative_g_score = gScore[current] + dist_between(current, neighbour); // length of this path.
+
+			if (!openSet.Contains(neighbour)) {
+				openSet.Add(neighbour);
+			} else if (tentative_g_score >= gScore[neighbour]) {
+				continue;		// This is not a better path.
+			}
+
+			// This path is the best until now. Record it!
+			cameFrom.Add(neighbour, current);
+
+			gScore[neighbour] = tentative_g_score;
+			fScore[neighbour] = gScore[neighbour] + heuristic_cost_estimate(neighbour, goal);
+		}
+	}
+
+	throw std::exception("No path found!");
+}
+
+TMap<FVector2D, float> AAStar::infMap()
+{
+	TMap<FVector2D, float> map;
+	for (int32 c = 0; c < vertices.Num(); c++) {
+		map.Add(vertices[c], std::numeric_limits<float>::infinity());
+	}
+
+	return map;
+}
+
+int32 AAStar::findLowestFScore(TArray<FVector2D> openSet, TMap<FVector2D, float> fScore)
+{
+	int32 index = 0;
+	float score = std::numeric_limits<float>::infinity();
+	for (int32 c = 0; c < openSet.Num(); c++) {
+		if (fScore[openSet[c]] < score) {
+			index = c;
+			score = fScore[openSet[c]];
+		}
+	}
+
+	return index;
+}
+
+void AAStar::getNeighbours(TQueue<FVector2D> & queue, FVector2D current)
+{
+	TArray<FVector2D> neighbours;
+	visibilityGraph.MultiFind(current, neighbours);
+
+	for (int32 c = 0; c < neighbours.Num(); c++) {
+		queue.Enqueue(neighbours[c]);
+	}
+}
