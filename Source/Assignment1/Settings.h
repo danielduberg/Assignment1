@@ -4,6 +4,8 @@
 
 #include <iostream>
 
+#define OUTPUT
+
 /*
  * Variables
  */
@@ -23,6 +25,7 @@ static bool binMap;
 static bool mapRead = false;
 static TArray<TArray<float>> map;
 static TArray<FVector2D> points;
+static TArray<TArray<FVector2D>> obstacles;
 static TArray<TArray<FVector2D>> edges;
 static TArray<FVector2D> vertices;
 
@@ -49,6 +52,8 @@ static void writePathToFile(TArray<FVector> path, const FString fileName);
 
 static TArray<TArray<float>> makeDiscreteMap();
 
+static TArray<TArray<FVector2D>> getObstacles(TArray<TArray<float>> map);
+
 static TArray<TArray<FVector2D>> getEdges(TArray<TArray<float>> map);
 
 static TArray<FVector2D> getVertices(TArray<TArray<float>> map);
@@ -62,6 +67,8 @@ TArray<TArray<float>> & getMap()
 	if (!mapRead) {
 		map = readData(fileMap);
 
+		obstacles = getObstacles(map);
+
 		edges = getEdges(map);
 
 		vertices = getVertices(map);
@@ -72,6 +79,53 @@ TArray<TArray<float>> & getMap()
 	}
 
 	return map;
+}
+
+TArray<TArray<FVector2D>> getObstacles(TArray<TArray<float>> map)
+{
+	TArray<TArray<FVector2D>> obstacles;
+	
+	FVector2D vertice;
+	bool obstDone = false;
+	TArray<FVector2D> obstacle;
+	for (int32 c = 0; c < map.Num(); c++) {
+		if (obstDone) {
+			obstDone = false;
+			obstacles.Add(obstacle);
+			obstacle.Empty();
+		}
+
+		vertice = FVector2D(map[c][0], map[c][1]);
+
+		obstacle.Add(vertice);
+
+		if (map[c][2] == 3) {
+			obstDone = true;
+		}
+	}
+
+	if (obstDone) {
+		obstacles.Add(obstacle);
+	}
+
+#ifdef OUTPUT
+	UE_LOG(LogTemp, Warning, TEXT("Obstacles:"));
+	for (int32 c = 0; c < obstacles.Num(); c++) {
+		UE_LOG(LogTemp, Warning, TEXT("\tObstacle #%d:"), c+1);
+		FString str;
+		for (int32 g = 0; g < obstacles[c].Num(); g++) {
+			str.Append("(");
+			str.Append(FString::SanitizeFloat(obstacles[c][g].X));
+			str.Append(", ");
+			str.Append(FString::SanitizeFloat(obstacles[c][g].Y));
+			str.Append("), ");
+		}
+		UE_LOG(LogTemp, Warning, TEXT("\t\t%s\r\n"), *str);
+	}
+#endif
+	
+
+	return obstacles;
 }
 
 TArray<TArray<FVector2D>> getEdges(TArray<TArray<float>> map)
@@ -106,14 +160,12 @@ TArray<TArray<FVector2D>> getEdges(TArray<TArray<float>> map)
 		edges.Add(temp);
 	}
 
-	/*
+#ifdef OUTPUT
+	UE_LOG(LogTemp, Warning, TEXT("Edges:"));
 	for (int32 c = 0; c < edges.Num(); c++) {
-		UE_LOG(LogTemp, Warning, TEXT("Obstacle #%d:"), c+1);
-		for (int32 g = 0; g < edges[c].Num(); g++) {
-			UE_LOG(LogTemp, Warning, TEXT("\t(%f, %f)"), edges[c][g].X, edges[c][g].Y);
-		}
+		UE_LOG(LogTemp, Warning, TEXT("\tEdge #%d: (%f, %f) - (%f, %f)\r\n"), c + 1, edges[c][0].X, edges[c][0].Y, edges[c][1].X, edges[c][1].Y);
 	}
-	*/
+#endif
 
 	return edges;
 }
@@ -125,6 +177,13 @@ TArray<FVector2D> getVertices(TArray<TArray<float>> map)
 	for (int32 c = 0; c < map.Num(); c++) {
 		vertices.Add(FVector2D(map[c][0], map[c][1]));
 	}
+
+#ifdef OUTPUT
+	UE_LOG(LogTemp, Warning, TEXT("Vertices:"));
+	for (int32 c = 0; c < vertices.Num(); c++) {
+		UE_LOG(LogTemp, Warning, TEXT("\tVertice #%d: (%f, %f)\r\n"), c+1, vertices[c].X, vertices[c].Y);
+	}
+#endif
 
 	return vertices;
 }

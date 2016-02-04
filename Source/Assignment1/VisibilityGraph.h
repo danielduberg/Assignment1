@@ -45,19 +45,6 @@ TMultiMap<FVector2D, FVector2D> getVisibilityGraph(TArray<TArray<FVector2D>> edg
 		UE_LOG(LogTemp, Warning, TEXT("Key #%d (%f, %f): %s\r\n"), c+1, keys[c].X, keys[c].Y, *str);
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Vertices:"));
-	for (int32 c = 0; c < vertices.Num(); c++) {
-		UE_LOG(LogTemp, Warning, TEXT("(%f, %f)\r\n"), vertices[c].X, vertices[c].Y);
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Edges:"));
-	for (int32 c = 0; c < edges.Num(); c++) {
-		UE_LOG(LogTemp, Warning, TEXT("Edge #%d:"), c + 1);
-		for (int32 g = 0; g < edges[c].Num(); g++) {
-			UE_LOG(LogTemp, Warning, TEXT("\t(%f, %f)"), edges[c][g].X, edges[c][g].Y);
-		}
-	}
-
 	return visibilityGraph;
 }
 
