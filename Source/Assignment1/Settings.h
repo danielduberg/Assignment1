@@ -37,6 +37,8 @@ static const float phi = 0.01;
 static float scaleToIndex = 1;
 static const float meshScale = meshSide * scaleFactor;
 
+static const float bufferSize = 5;
+
 
 /*
  * Functions
@@ -51,6 +53,10 @@ static TArray<TArray<FVector2D>> getObstacles(TArray<TArray<float>> map);
 static TArray<TArray<FVector2D>> getEdges(TArray<TArray<float>> map);
 
 static TArray<FVector2D> getVertices(TArray<TArray<float>> map);
+
+static FVector2D makeBufferPoint(int32 obstacle, FVector2D p0, FVector2D p1, FVector2D p2);
+
+static bool insidePoly(TArray<FVector2D> poly, FVector2D point);
 
 static TArray<TArray<float>> & getPositions();
 
@@ -174,6 +180,39 @@ TArray<FVector2D> getVertices(TArray<TArray<float>> map)
 {
 	TArray<FVector2D> vertices;
 
+	FVector2D currPoint, lastPoint, nextPoint;
+	for (int32 c = 0; c < obstacles.Num(); c++) {
+		for (int32 g = 0; g < obstacles[c].Num(); g++) {
+			if (g == 0) {
+				lastPoint = obstacles[c][obstacles[c].Num() - 1];
+			} else {
+				lastPoint = obstacles[c][g - 1];
+			}
+
+			currPoint = obstacles[c][g];
+
+			if (g + 1 == obstacles[c].Num()) {
+				nextPoint = obstacles[c][0];
+			} else {
+				nextPoint = obstacles[c][g + 1];
+			}
+
+			vertices.Add(makeBufferPoint(c, lastPoint, currPoint, nextPoint));
+		}
+	}
+
+	#ifdef OUTPUT
+	UE_LOG(LogTemp, Warning, TEXT("Vertices:"));
+	for (int32 c = 0; c < vertices.Num(); c++) {
+		UE_LOG(LogTemp, Warning, TEXT("\tVertice #%d: (%f, %f)\r\n"), c + 1, vertices[c].X, vertices[c].Y);
+	}
+	#endif
+
+	return vertices;
+
+	/*
+	TArray<FVector2D> vertices;
+
 	for (int32 c = 0; c < map.Num(); c++) {
 		vertices.Add(FVector2D(map[c][0], map[c][1]));
 	}
@@ -185,7 +224,40 @@ TArray<FVector2D> getVertices(TArray<TArray<float>> map)
 	}
 #endif
 
-	return vertices;
+	return vertices;*/
+}
+
+FVector2D makeBufferPoint(int32 obstacle, FVector2D p0, FVector2D p1, FVector2D p2)
+{
+	FVector2D line1 = p1 - p0;
+	FVector2D line2 = p1 - p0;
+
+	line1.Normalize();
+	line2.Normalize();
+
+	FVector2D result = line1 + line2;
+	result.Normalize();
+
+	FVector2D bufferPoint = p1 + bufferSize * result;
+
+	if (insidePoly(obstacles[obstacle], bufferPoint)) {
+		return p1 - (bufferSize * result);
+	} else {
+		return bufferPoint;
+	}
+}
+
+bool insidePoly(TArray<FVector2D> poly, FVector2D point)
+{
+	bool insidePoly = false;
+	for (int32 c = 0, g = poly.Num() - 1; c < poly.Num(); g = c++) {
+		if (((poly[c].Y > point.Y) != (poly[g].Y > point.Y)) &&
+			(point.X < (poly[g].X - poly[c].X) * (point.Y - poly[c].Y) / (poly[g].Y - poly[c].Y) + poly[c].X)) {
+			insidePoly = !insidePoly;
+		}
+	}
+
+	return insidePoly;
 }
 
 TArray<TArray<float>> & getPositions()

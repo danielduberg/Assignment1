@@ -48,19 +48,6 @@ TMultiMap<FVector2D, FVector2D> getVisibilityGraph(TArray<TArray<FVector2D>> edg
 	return visibilityGraph;
 }
 
-bool insidePoly(TArray<FVector2D> poly, FVector2D point)
-{
-	bool insidePoly = false;
-	for (int32 c = 0, g = obstacles.Num() - 1; c < obstacles.Num(); g = c++) {
-		if (((poly[c].Y > point.Y) != (poly[g].Y > point.Y)) &&
-			(point.X < (poly[g].X - poly[c].X) * (point.Y - poly[c].Y) / (poly[g].Y - poly[c].Y) + poly[c].X)) {
-			insidePoly = !insidePoly;
-		}
-	}
-
-	return insidePoly;
-}
-
 bool intersect(FVector2D point1, FVector2D point2, FVector2D point3, FVector2D point4)
 {
 	FVector2D direction1 = point2 - point1;
