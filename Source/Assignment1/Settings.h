@@ -46,17 +46,17 @@ static TArray<TArray<float>> readData(const FString fileName);
 
 static TArray<TArray<float>> & getMap();
 
-static TArray<TArray<float>> & getPositions();
-
-static void writePathToFile(TArray<FVector> path, const FString fileName);
-
-static TArray<TArray<float>> makeDiscreteMap();
-
 static TArray<TArray<FVector2D>> getObstacles(TArray<TArray<float>> map);
 
 static TArray<TArray<FVector2D>> getEdges(TArray<TArray<float>> map);
 
 static TArray<FVector2D> getVertices(TArray<TArray<float>> map);
+
+static TArray<TArray<float>> & getPositions();
+
+static void writePathToFile(TArray<FVector> path, const FString fileName);
+
+static TArray<TArray<float>> makeDiscreteMap();
 
 /*
  * Implementations
