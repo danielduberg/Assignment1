@@ -5,6 +5,7 @@
 #include <iostream>
 
 #define OUTPUT
+#define MATLAB
 
 /*
  * Variables
@@ -37,7 +38,7 @@ static const float phi = 0.01;
 static float scaleToIndex = 1;
 static const float meshScale = meshSide * scaleFactor;
 
-static const float bufferSize = 5;
+static const float bufferSize = 1;
 
 
 /*
@@ -201,12 +202,20 @@ TArray<FVector2D> getVertices(TArray<TArray<float>> map)
 		}
 	}
 
-	#ifdef OUTPUT
+#ifdef OUTPUT
 	UE_LOG(LogTemp, Warning, TEXT("Vertices:"));
 	for (int32 c = 0; c < vertices.Num(); c++) {
 		UE_LOG(LogTemp, Warning, TEXT("\tVertice #%d: (%f, %f)\r\n"), c + 1, vertices[c].X, vertices[c].Y);
 	}
-	#endif
+#endif
+
+#ifdef MATLAB
+	UE_LOG(LogTemp, Warning, TEXT("Vertices:"));
+	for (int32 c = 0; c < vertices.Num(); c++) {
+		UE_LOG(LogTemp, Warning, TEXT("%f %f"), vertices[c].X, vertices[c].Y);
+	}
+#endif
+
 
 	return vertices;
 
@@ -230,7 +239,7 @@ TArray<FVector2D> getVertices(TArray<TArray<float>> map)
 FVector2D makeBufferPoint(int32 obstacle, FVector2D p0, FVector2D p1, FVector2D p2)
 {
 	FVector2D line1 = p1 - p0;
-	FVector2D line2 = p1 - p0;
+	FVector2D line2 = p1 - p2;
 
 	line1.Normalize();
 	line2.Normalize();

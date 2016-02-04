@@ -71,15 +71,17 @@ bool intersect(FVector2D point1, FVector2D point2, FVector2D point3, FVector2D p
 
 bool canSee(FVector2D start, FVector2D end, TArray<TArray<FVector2D>> & edges)
 {
+	/*
 	for (int32 c = 0; c < edges.Num(); c++) {
 		if ((edges[c].Contains(start) && edges[c].Contains(end))) {
 			return true;
 		}
 	}
+	*/
 
 	for (int32 c = 0; c < edges.Num(); c++) {
 
-		if (start == edges[c][0] || start == edges[c][1] || end == edges[c][0] || end == edges[c][1]) continue;
+		//if (start == edges[c][0] || start == edges[c][1] || end == edges[c][0] || end == edges[c][1]) continue;
 
 		if (intersect(start, end, edges[c][0], edges[c][1])) {
 			return false;
