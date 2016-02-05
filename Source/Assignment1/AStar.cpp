@@ -125,7 +125,7 @@ TArray<FVector> AAStar::reconstruct_path(TMap<FVector2D, FVector2D> cameFrom, FV
 {
 	TArray<FVector> tempPath;
 	TArray<FVector> totalPath;
-	tempPath.Add(FVector(current.X, current.Y, 0));
+	tempPath.Add(FVector(current.X - 1, current.Y - 1, 0));
 	FVector location = FVector(current.Y * gridSize, current.X * gridSize, 0);
 	if (binMap) {
 		location.X += (gridSize / 2);
@@ -141,7 +141,7 @@ TArray<FVector> AAStar::reconstruct_path(TMap<FVector2D, FVector2D> cameFrom, FV
 			location.Y += (gridSize / 2);
 		}
 		totalPath.Insert(scaleToIndex * location, 0);
-		tempPath.Insert(FVector(current.X, current.Y, 0), 0);
+		tempPath.Insert(FVector(current.X - 1, current.Y - 1, 0), 0);
 	}
 	//UE_LOG(LogTemp, Warning, TEXT("%f %f"), current[0], current[1]);
 

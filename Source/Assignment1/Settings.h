@@ -29,6 +29,7 @@ static TArray<FVector2D> points;
 static TArray<TArray<FVector2D>> obstacles;
 static TArray<TArray<FVector2D>> edges;
 static TArray<FVector2D> vertices;
+static TMap<FVector2D, FVector2D> verticesToOriginal;
 
 static bool positionsRead = false;
 static TArray<TArray<float>> positions;
@@ -198,7 +199,9 @@ TArray<FVector2D> getVertices(TArray<TArray<float>> map)
 				nextPoint = obstacles[c][g + 1];
 			}
 
-			vertices.Add(makeBufferPoint(c, lastPoint, currPoint, nextPoint));
+			FVector2D vertice = makeBufferPoint(c, lastPoint, currPoint, nextPoint);
+			vertices.Add(vertice);
+			verticesToOriginal.Add(vertice, currPoint);
 		}
 	}
 

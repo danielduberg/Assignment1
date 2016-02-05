@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Settings.h"
+
 static TMultiMap<FVector2D, FVector2D> visibilityGraph;
 
 
@@ -73,17 +75,31 @@ bool canSee(FVector2D start, FVector2D end, TArray<TArray<FVector2D>> & edges)
 {
 	/*
 	for (int32 c = 0; c < edges.Num(); c++) {
-		if ((edges[c].Contains(start) && edges[c].Contains(end))) {
-			return true;
+		if (intersect(start, end, edges[c][0], edges[c][1])) {
+			return false;
 		}
 	}
 	*/
 
 	for (int32 c = 0; c < edges.Num(); c++) {
-
-		//if (start == edges[c][0] || start == edges[c][1] || end == edges[c][0] || end == edges[c][1]) continue;
-
 		if (intersect(start, end, edges[c][0], edges[c][1])) {
+			return false;
+		}
+	}
+
+	for (int32 c = 0; c < edges.Num(); c++) {
+		if (verticesToOriginal.Contains(start)) {
+			if (edges[c].Contains(verticesToOriginal[start])) {
+				continue;
+			}
+		}
+		if (verticesToOriginal.Contains(end)) {
+			if (edges[c].Contains(verticesToOriginal[end])) {
+				continue;
+			}
+		}
+
+		if (intersect(start, end, edges[c][0] - 1, edges[c][1] + 1) || intersect(start, end, edges[c][0] + 1, edges[c][1] - 1)) {
 			return false;
 		}
 	}
