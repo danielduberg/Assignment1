@@ -18,7 +18,7 @@ AActor * AMapCreator::createMap(bool binary, ACameraActor * camera, AStaticMeshA
 	width = getMap()[0].Num();
 
 	floor->SetActorScale3D(FVector(height * ratio, width * ratio, 1));
-	floor->SetActorLocation(FVector((width / 2) * gridSize, (height / 2) * gridSize, -((meshSide / 2) + (characterHeight / 2))));
+	floor->SetActorLocation(FVector((width / 2) * gridSize, (height / 2) * gridSize, -((meshSide / 2) + characterHeight)));
 
 	// Center camera above the center of floor, at a distance that fits the entire field
 	float FOV = 90;
@@ -30,6 +30,12 @@ AActor * AMapCreator::createMap(bool binary, ACameraActor * camera, AStaticMeshA
 								TEXT("Blueprint'/Game/Blueprints/MazeBlock.MazeBlock'"));
 	UBlueprint * bp = Cast<UBlueprint>(cls);
 	blockBP = (UClass*)bp->GeneratedClass;
+
+	// Get MazeBlock2 blueprint
+	cls = StaticLoadObject(UObject::StaticClass(), nullptr,
+		TEXT("Blueprint'/Game/Blueprints/MazeBlock2.MazeBlock2'"));
+	bp = Cast<UBlueprint>(cls);
+	blockBP2 = (UClass*)bp->GeneratedClass;
 
 	// Get Character blueprint
 	cls = StaticLoadObject(UObject::StaticClass(), nullptr,
@@ -57,9 +63,28 @@ FVector AMapCreator::spawnMap(UWorld* const world)
 				else		xLoc = c * gridSize;
 
 				FVector location(xLoc, g * gridSize, -(characterHeight / 2));
-				AActor * block = world->SpawnActor<AActor>(blockBP, location, { 0,0,0 });
+				//AActor * block = world->SpawnActor<AActor>(blockBP, location, { 0,0,0 });
 			}
 		}
+	}
+
+	SetActorScale3D(FVector(0, 0, 0));
+
+	for (int32 c = 0; c < edges.Num(); c++) {
+		FVector2D edgeStart(edges[c][0].Y * gridSize, edges[c][0].X * gridSize);
+		FVector2D edgeEnd(edges[c][1].Y * gridSize, edges[c][1].X * gridSize);
+
+		FVector2D line = edgeEnd - edgeStart;
+
+		FRotator rot = FVector(line.X, line.Y, 0).Rotation();
+
+		float distance = FVector2D::Distance(edgeStart, edgeEnd);
+			
+		FVector2D location(edgeStart + 0.5 * line);
+		AActor * block = world->SpawnActor<AActor>(blockBP, FVector(location, -(characterHeight / 2)), rot);
+		FOutputDeviceNull ar;
+		const FString command = FString::Printf(TEXT("changeScale %f"), distance / gridSize);
+		block->CallFunctionByNameWithArguments(*command, ar, NULL, true);
 	}
 
 	// Spawn character

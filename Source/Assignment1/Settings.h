@@ -39,7 +39,7 @@ static const float phi = 0.01;
 static float scaleToIndex = 1;
 static const float meshScale = meshSide * scaleFactor;
 
-static const float bufferSize = 1;
+static const float bufferSize = 0.5;
 
 
 /*

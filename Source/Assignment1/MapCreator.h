@@ -15,6 +15,7 @@ class ASSIGNMENT1_API AMapCreator : public ALevelScriptActor {
 
 	float height, width;
 	TSubclassOf<class UObject> blockBP;					// For spawning blocks
+	TSubclassOf<class UObject> blockBP2;					// For spawning small blocks
 
 	public:
 	UFUNCTION(BlueprintCallable, Category = "Map Creation")
