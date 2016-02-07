@@ -39,7 +39,7 @@ static const float phi = 0.01;
 static float scaleToIndex = 1;
 static const float meshScale = meshSide * scaleFactor;
 
-static const float bufferSize = 2;
+static float bufferSize = 0.01;
 
 
 /*
@@ -76,13 +76,16 @@ TArray<TArray<float>> & getMap()
 		map = readData(fileMap);
 
 		if (!binMap) {
+			UE_LOG(LogTemp, Warning, TEXT("Tjosan: %f"), bufferSize);
+
+
 			obstacles = getObstacles(map);
 
 			edges = getEdges(map);
 
 			vertices = getVertices(map);
 
-			//map = makeDiscreteMap();
+			map = makeDiscreteMap();
 		}
 
 		mapRead = true;

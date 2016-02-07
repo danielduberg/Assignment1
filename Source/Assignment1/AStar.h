@@ -16,7 +16,7 @@ public:
 	static TArray<FVector> generate_path(int32 n);
 
 	UFUNCTION(BlueprintCallable, Category = "AStar - Polygonal")
-	static TArray<FVector> generate_path2();
+	static TArray<FVector> generate_path2(float buffer);
 
 private:
 	static int32 findLowestFScore(TArray<FVector2D> openSet, TArray<TArray<float>> fScore);

@@ -255,9 +255,11 @@ Kinematic point model & diff. drive model
 
 #include "VisibilityGraph.h"
 
-TArray<FVector> AAStar::generate_path2()
+TArray<FVector> AAStar::generate_path2(float buffer)
 {
 	binMap = false;
+
+	bufferSize = buffer;
 
 	getMap();
 	getPositions();
