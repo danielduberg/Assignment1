@@ -75,13 +75,15 @@ TArray<TArray<float>> & getMap()
 	if (!mapRead) {
 		map = readData(fileMap);
 
-		obstacles = getObstacles(map);
+		if (!binMap) {
+			obstacles = getObstacles(map);
 
-		edges = getEdges(map);
+			edges = getEdges(map);
 
-		vertices = getVertices(map);
+			vertices = getVertices(map);
 
-		map = makeDiscreteMap();
+			//map = makeDiscreteMap();
+		}
 
 		mapRead = true;
 	}

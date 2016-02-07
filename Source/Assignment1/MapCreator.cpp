@@ -55,45 +55,48 @@ AActor * AMapCreator::createMap(bool binary, ACameraActor * camera, AStaticMeshA
 FVector AMapCreator::spawnMap(UWorld* const world)
 {
 	// Spawn maze blocks
-	for (int c = 0; c < height; c++) {
-		for (int g = 0; g < width; g++) {
-			if (getMap()[c][g] == 1) {
-				float xLoc;
-				if (binMap) xLoc = (height - c) * gridSize;
-				else		xLoc = c * gridSize;
+	if (binMap) {
+		for (int c = 0; c < height; c++) {
+			for (int g = 0; g < width; g++) {
+				if (getMap()[c][g] == 1) {
+					float xLoc;
+					if (binMap) xLoc = (height - c - 1) * gridSize;
+					else		xLoc = c * gridSize;
 
-				FVector location(xLoc, g * gridSize, -(characterHeight / 2));
-				//AActor * block = world->SpawnActor<AActor>(blockBP, location, { 0,0,0 });
+					FVector location(xLoc, g * gridSize, -(characterHeight / 2));
+					AActor * block = world->SpawnActor<AActor>(blockBP2, location, { 0,0,0 });
+				}
 			}
+		}
+	} else {
+		for (int32 c = 0; c < edges.Num(); c++) {
+			FVector2D edgeStart(edges[c][0].Y * gridSize, edges[c][0].X * gridSize);
+			FVector2D edgeEnd(edges[c][1].Y * gridSize, edges[c][1].X * gridSize);
+
+			FVector2D line = edgeEnd - edgeStart;
+
+			FRotator rot = FVector(line.X, line.Y, 0).Rotation();
+
+			float distance = FVector2D::Distance(edgeStart, edgeEnd);
+
+			FVector2D location(edgeStart + 0.5 * line);
+			AActor * block = world->SpawnActor<AActor>(blockBP, FVector(location, -(characterHeight / 2)), rot);
+			FOutputDeviceNull ar;
+			const FString command = FString::Printf(TEXT("changeScale %f"), distance / gridSize);
+			block->CallFunctionByNameWithArguments(*command, ar, NULL, true);
 		}
 	}
 
-	SetActorScale3D(FVector(0, 0, 0));
-
-	for (int32 c = 0; c < edges.Num(); c++) {
-		FVector2D edgeStart(edges[c][0].Y * gridSize, edges[c][0].X * gridSize);
-		FVector2D edgeEnd(edges[c][1].Y * gridSize, edges[c][1].X * gridSize);
-
-		FVector2D line = edgeEnd - edgeStart;
-
-		FRotator rot = FVector(line.X, line.Y, 0).Rotation();
-
-		float distance = FVector2D::Distance(edgeStart, edgeEnd);
-			
-		FVector2D location(edgeStart + 0.5 * line);
-		AActor * block = world->SpawnActor<AActor>(blockBP, FVector(location, -(characterHeight / 2)), rot);
-		FOutputDeviceNull ar;
-		const FString command = FString::Printf(TEXT("changeScale %f"), distance / gridSize);
-		block->CallFunctionByNameWithArguments(*command, ar, NULL, true);
-	}
-
 	// Spawn character
-	float xLoc = positions[0][1] * gridSize;
-	float yLoc = positions[0][0] * gridSize;
+	float xLoc, yLoc;
+
 	if (binMap) {
-		xLoc += (gridSize / 2);
-		yLoc += (gridSize / 2);
+		xLoc = (height - positions[0][1]) * gridSize + (gridSize / 2);
+		yLoc = (positions[0][0] - 1) * gridSize + (gridSize / 2);
+	} else {
+		yLoc = positions[0][0] * gridSize;
+		xLoc = positions[0][1] * gridSize;
 	}
 
-	return scaleToIndex * FVector(xLoc, yLoc, 0);
+	return FVector(xLoc, yLoc, 0);
 }

@@ -13,6 +13,8 @@
 
 TArray<FVector> AAStar::generate_path(int32 n)
 {
+	binMap = true;
+
 	if (n != 4 && n != 8 && n != 16) {
 		throw std::invalid_argument("n has to be 4, 8 or 16");
 	}
@@ -126,19 +128,21 @@ TArray<FVector> AAStar::reconstruct_path(TMap<FVector2D, FVector2D> cameFrom, FV
 	TArray<FVector> tempPath;
 	TArray<FVector> totalPath;
 	tempPath.Add(FVector(current.X - 1, current.Y - 1, 0));
-	FVector location = FVector(current.Y * gridSize, current.X * gridSize, 0);
+	FVector location;
 	if (binMap) {
-		location.X += (gridSize / 2);
-		location.Y += (gridSize / 2);
+		location = FVector((getMap().Num() - current.Y - 1) * gridSize + (gridSize / 2), current.X * gridSize + (gridSize / 2), 0);
+	} else {
+		location = FVector(current.Y * gridSize, current.X * gridSize, 0);
 	}
+
 	totalPath.Add(scaleToIndex * location);
 	while (cameFrom.Contains(current)) {
 		//UE_LOG(LogTemp, Warning, TEXT("%f %f"), current[0], current[1]);
 		current = cameFrom[current];
-		location = FVector((current.Y) * gridSize, (current.X) * gridSize, 0);
 		if (binMap) {
-			location.X += (gridSize / 2);
-			location.Y += (gridSize / 2);
+			location = FVector((getMap().Num() - current.Y - 1) * gridSize + (gridSize / 2), current.X * gridSize + (gridSize / 2), 0);
+		} else {
+			location = FVector((current.Y) * gridSize, (current.X) * gridSize, 0);
 		}
 		totalPath.Insert(scaleToIndex * location, 0);
 		tempPath.Insert(FVector(current.X - 1, current.Y - 1, 0), 0);
@@ -253,6 +257,8 @@ Kinematic point model & diff. drive model
 
 TArray<FVector> AAStar::generate_path2()
 {
+	binMap = false;
+
 	getMap();
 	getPositions();
 
